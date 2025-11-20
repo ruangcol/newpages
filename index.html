@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>今天吃什么？</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: "微软雅黑", "Roboto", sans-serif;
+            background-color: #f0f8fb;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: white;
+            padding: 25px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            width: 100%;
+            max-width: 500px;
+        }
+        h1 {
+            color: #2d3748;
+            font-size: 24px;
+            margin-bottom: 25px;
+            text-align: center;
+            font-weight: 600;
+        }
+        #result {
+            color: #4a5568;
+            font-size: 18px;
+            line-height: 2;
+            text-align: center;
+            white-space: pre-line; /* 保留换行 */
+        }
+        /* 手机端适配 */
+        @media (max-width: 375px) {
+            h1 {
+                font-size: 20px;
+                margin-bottom: 20px;
+            }
+            #result {
+                font-size: 16px;
+                line-height: 1.9;
+            }
+            .container {
+                padding: 20px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>今天吃什么？</h1>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        // 获取当前星期（1=周一，7=周日）
+        const now = new Date();
+        let weekday = now.getDay(); // 0=周日，1=周一...6=周六
+        weekday = weekday === 0 ? 7 : weekday;
+
+        const weekdayName = ["", "周一", "周二", "周三", "周四", "周五", "周六", "周日"];
+        let text = "";
+
+        switch (weekday) {
+            case 1: text = `今天是${weekdayName[weekday]}\n麦当劳会员日\n一起去吃麦当劳吧`; break;
+            case 2: text = `今天是${weekdayName[weekday]}\n塔斯汀会员日\n美味的汉堡和披萨`; break;
+            case 3: text = `今天是${weekdayName[weekday]}\n必胜客尖叫星期三\nCome on必胜客！`; break;
+            case 4: text = `今天是${weekdayName[weekday]}\nKFC疯狂星期四\n罚你请我吃KFC疯狂星期四！`; break;
+            case 5: text = `今天是${weekdayName[weekday]}\n华莱士买一送一\n赶紧去买吧\n然后送我一份`; break;
+            case 6: text = `今天是${weekdayName[weekday]}\n又是躺在床上度过的一天\n不行，我要起床玩MC`; break;
+            case 7: text = `今天是${weekdayName[weekday]}\n哎，明天又有早八了\n布豪！我的作业还没写！`; break;
+            default: text = "获取星期失败！";
+        }
+
+        // 显示结果
+        document.getElementById("result").textContent = text;
+    </script>
+</body>
+</html>
