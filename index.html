@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>今天吃什么？</title>
+    <title>2026 跨年粒子文字</title>
     <style>
         * {
             margin: 0;
@@ -11,80 +11,398 @@
             box-sizing: border-box;
         }
         body {
-            font-family: "微软雅黑", "Roboto", sans-serif;
-            background-color: #f0f8fb;
-            padding: 20px;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            background-color: #000;
+            overflow: hidden;
+            font-family: "Microsoft YaHei", sans-serif;
         }
-        .container {
-            background: white;
-            padding: 25px 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-            width: 100%;
-            max-width: 500px;
+        canvas {
+            display: block;
         }
-        h1 {
-            color: #2d3748;
-            font-size: 24px;
-            margin-bottom: 25px;
-            text-align: center;
-            font-weight: 600;
+        .debug-info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            font-size: 14px;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 5px 10px;
+            border-radius: 5px;
+            z-index: 100;
         }
-        #result {
-            color: #4a5568;
-            font-size: 18px;
-            line-height: 2;
-            text-align: center;
-            white-space: pre-line; /* 保留换行 */
-        }
-        /* 手机端适配 */
-        @media (max-width: 375px) {
-            h1 {
-                font-size: 20px;
-                margin-bottom: 20px;
-            }
-            #result {
-                font-size: 16px;
-                line-height: 1.9;
-            }
-            .container {
-                padding: 20px 15px;
-            }
+        .instructions {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            color: white;
+            font-size: 12px;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 5px 10px;
+            border-radius: 5px;
+            z-index: 100;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>今天吃什么？</h1>
-        <div id="result"></div>
-    </div>
+    <div class="debug-info" id="debugInfo"></div>
+    <div class="instructions">按ESC键退出</div>
+    <canvas id="particleCanvas"></canvas>
 
     <script>
-        // 获取当前星期（1=周一，7=周日）
-        const now = new Date();
-        let weekday = now.getDay(); // 0=周日，1=周一...6=周六
-        weekday = weekday === 0 ? 7 : weekday;
-
-        const weekdayName = ["", "周一", "周二", "周三", "周四", "周五", "周六", "周日"];
-        let text = "";
-
-        switch (weekday) {
-            case 1: text = `今天是${weekdayName[weekday]}\n麦当劳会员日\n一起去吃麦当劳吧`; break;
-            case 2: text = `今天是${weekdayName[weekday]}\n塔斯汀会员日\n美味的汉堡和披萨`; break;
-            case 3: text = `今天是${weekdayName[weekday]}\n必胜客尖叫星期三\nCome on必胜客！`; break;
-            case 4: text = `今天是${weekdayName[weekday]}\nKFC疯狂星期四\n罚你请我吃KFC疯狂星期四！`; break;
-            case 5: text = `今天是${weekdayName[weekday]}\n华莱士买一送一\n赶紧去买吧\n然后送我一份`; break;
-            case 6: text = `今天是${weekdayName[weekday]}\n又是躺在床上度过的一天\n不行，我要起床玩MC`; break;
-            case 7: text = `今天是${weekdayName[weekday]}\n哎，明天又有早八了\n布豪！我的作业还没写！`; break;
-            default: text = "获取星期失败！";
+        // 初始化画布
+        const canvas = document.getElementById('particleCanvas');
+        const ctx = canvas.getContext('2d');
+        const debugInfo = document.getElementById('debugInfo');
+        
+        // 设置画布尺寸
+        const width = 1600;
+        const height = 1000;
+        canvas.width = width;
+        canvas.height = height;
+        
+        // 颜色
+        const WHITE = '#FFFFFF';
+        const BLACK = '#000000';
+        
+        // 文字列表
+        const texts = ["2026", "新年快乐", "恭喜发财", "万事如意", "身体健康", "家庭美满", "工作顺利"];
+        
+        // 存储文字图像数据
+        const textImageData = {};
+        
+        // 预渲染文字图像
+        function preRenderTexts() {
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            const font = 'bold 200px "Microsoft YaHei"';
+            
+            texts.forEach(text => {
+                // 测量文字尺寸
+                tempCtx.font = font;
+                const metrics = tempCtx.measureText(text);
+                const textWidth = Math.ceil(metrics.width);
+                const textHeight = 250; // 固定高度
+                
+                tempCanvas.width = textWidth + 40; // 增加边距
+                tempCanvas.height = textHeight + 40;
+                
+                tempCtx.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
+                tempCtx.font = font;
+                tempCtx.fillStyle = WHITE;
+                tempCtx.textAlign = 'center';
+                tempCtx.textBaseline = 'middle';
+                tempCtx.fillText(text, tempCanvas.width / 2, tempCanvas.height / 2);
+                
+                // 获取图像数据
+                const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+                textImageData[text] = {
+                    data: imageData,
+                    width: tempCanvas.width,
+                    height: tempCanvas.height
+                };
+                
+                console.log(`预渲染文字: ${text}, 尺寸: ${tempCanvas.width}x${tempCanvas.height}`);
+            });
         }
-
-        // 显示结果
-        document.getElementById("result").textContent = text;
+        
+        // 随机粒子类
+        class RandomParticle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.color = WHITE;
+                this.size = Math.random() * 1 + 1;
+                this.speedX = (Math.random() - 0.5) * 0.5;
+                this.speedY = (Math.random() - 0.5) * 0.5;
+                this.jitterSeed = Math.random() * 100;
+                this.life = Math.random() * 200 + 200;
+            }
+            
+            update() {
+                this.life--;
+                
+                // 缓慢移动
+                this.x += this.speedX;
+                this.y += this.speedY;
+                
+                // 边界检测
+                if (this.x < 0 || this.x > width) this.speedX *= -1;
+                if (this.y < 0 || this.y > height) this.speedY *= -1;
+                
+                // 轻微抖动
+                const jitterX = Math.sin(Date.now() * 0.003 + this.jitterSeed) * 0.8;
+                const jitterY = Math.cos(Date.now() * 0.002 + this.jitterSeed * 1.5) * 0.8;
+                
+                this.x += jitterX * 0.1;
+                this.y += jitterY * 0.1;
+            }
+            
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            isAlive() {
+                return this.life > 0;
+            }
+        }
+        
+        // 文字粒子类
+        class TextParticle {
+            constructor(startX, startY) {
+                this.currentX = startX;
+                this.currentY = startY;
+                this.startX = startX;
+                this.startY = startY;
+                this.targetX = startX;
+                this.targetY = startY;
+                this.nextTargetX = startX;
+                this.nextTargetY = startY;
+                
+                this.color = WHITE;
+                this.size = Math.random() * 1 + 1;
+                this.transitionProgress = 0;
+                this.transitionSpeed = Math.random() * 0.02 + 0.04;
+                this.jitterSeed = Math.random() * 100;
+                this.phase = "display";
+            }
+            
+            updateTargets(currentTargetX, currentTargetY, nextTargetX, nextTargetY) {
+                this.startX = this.currentX;
+                this.startY = this.currentY;
+                this.targetX = currentTargetX;
+                this.targetY = currentTargetY;
+                this.nextTargetX = nextTargetX;
+                this.nextTargetY = nextTargetY;
+                this.transitionProgress = 0;
+            }
+            
+            update(phase) {
+                this.phase = phase;
+                
+                // 轻微抖动
+                const jitterX = Math.sin(Date.now() * 0.002 + this.jitterSeed) * 0.5;
+                const jitterY = Math.cos(Date.now() * 0.002 + this.jitterSeed * 1.3) * 0.5;
+                
+                if (phase === "display") {
+                    this.currentX = this.targetX + jitterX;
+                    this.currentY = this.targetY + jitterY;
+                } else if (phase === "transition") {
+                    this.transitionProgress += this.transitionSpeed;
+                    
+                    if (this.transitionProgress < 1) {
+                        const easeProgress = this.easeOut(this.transitionProgress);
+                        const baseX = this.startX + (this.nextTargetX - this.startX) * easeProgress;
+                        const baseY = this.startY + (this.nextTargetY - this.startY) * easeProgress;
+                        
+                        this.currentX = baseX + jitterX;
+                        this.currentY = baseY + jitterY;
+                    } else {
+                        this.currentX = this.nextTargetX + jitterX;
+                        this.currentY = this.nextTargetY + jitterY;
+                        this.targetX = this.nextTargetX;
+                        this.targetY = this.nextTargetY;
+                    }
+                }
+            }
+            
+            easeOut(t) {
+                return 1 - Math.pow(1 - t, 3);
+            }
+            
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.currentX, this.currentY, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        
+        // 创建文字粒子位置
+        function createParticlePositions(text) {
+            const textData = textImageData[text];
+            if (!textData) {
+                console.error(`未找到文字 ${text} 的图像数据`);
+                return [];
+            }
+            
+            const positions = [];
+            const centerX = width / 2 - textData.width / 2;
+            const centerY = height / 2 - textData.height / 2;
+            const imageData = textData.data.data;
+            
+            console.log(`开始处理文字: ${text}, 图像尺寸: ${textData.width}x${textData.height}`);
+            
+            let particleCount = 0;
+            for (let x = 0; x < textData.width; x += 2) {
+                for (let y = 0; y < textData.height; y += 2) {
+                    const index = (y * textData.width + x) * 4;
+                    const alpha = imageData[index + 3];
+                    
+                    if (alpha > 50 && Math.random() < 0.5) {
+                        const worldX = centerX + x;
+                        const worldY = centerY + y;
+                        positions.push([worldX, worldY]);
+                        particleCount++;
+                    }
+                }
+            }
+            
+            const maxParticles = 3000; // 减少粒子数量提高性能
+            if (positions.length > maxParticles) {
+                // 随机选择粒子
+                const selectedPositions = [];
+                for (let i = 0; i < maxParticles; i++) {
+                    const randomIndex = Math.floor(Math.random() * positions.length);
+                    selectedPositions.push(positions[randomIndex]);
+                }
+                console.log(`文字 '${text}' 粒子数从 ${positions.length} 减少到 ${selectedPositions.length}`);
+                return selectedPositions;
+            }
+            
+            console.log(`为文字 '${text}' 创建了 ${positions.length} 个粒子位置`);
+            return positions;
+        }
+        
+        function createParticles(positions) {
+            return positions.map(pos => new TextParticle(pos[0], pos[1]));
+        }
+        
+        function redistributeParticles(particles, currentPositions, nextPositions) {
+            const targetCount = Math.min(currentPositions.length, nextPositions.length, 5000);
+            
+            console.log(`重新分配粒子: 当前${particles.length}, 目标${targetCount}`);
+            
+            // 调整粒子数量
+            if (particles.length > targetCount) {
+                particles.length = targetCount;
+            } else if (particles.length < targetCount) {
+                while (particles.length < targetCount) {
+                    const randomPos = currentPositions.length > 0 ? 
+                        currentPositions[Math.floor(Math.random() * currentPositions.length)] : 
+                        [width / 2, height / 2];
+                    particles.push(new TextParticle(randomPos[0], randomPos[1]));
+                }
+            }
+            
+            // 调整位置数量
+            const finalCurrentPositions = currentPositions.slice(0, targetCount);
+            const finalNextPositions = nextPositions.slice(0, targetCount);
+            
+            // 分配目标位置
+            for (let i = 0; i < targetCount; i++) {
+                particles[i].updateTargets(
+                    finalCurrentPositions[i][0], finalCurrentPositions[i][1],
+                    finalNextPositions[i][0], finalNextPositions[i][1]
+                );
+            }
+            
+            console.log(`重新分配完成: ${particles.length} 个粒子`);
+            return particles;
+        }
+        
+        // 初始化
+        preRenderTexts();
+        
+        let currentTextIndex = 0;
+        let nextTextIndex = 1;
+        let currentPositions = createParticlePositions(texts[currentTextIndex]);
+        let nextPositions = createParticlePositions(texts[nextTextIndex]);
+        let particles = createParticles(currentPositions);
+        
+        // 随机粒子
+        let randomParticles = [];
+        
+        // 游戏状态
+        let phase = "display";
+        let phaseTimer = 0;
+        const displayDuration = 100;
+        const transitionDuration = 60;
+        
+        // 动画循环
+        function animate() {
+            // 清空画布
+            ctx.fillStyle = BLACK;
+            ctx.fillRect(0, 0, width, height);
+            
+            // 生成随机粒子
+            if (Math.random() < 0.3 && randomParticles.length < 50) {
+                randomParticles.push(new RandomParticle());
+            }
+            
+            // 更新随机粒子
+            randomParticles = randomParticles.filter(particle => {
+                particle.update();
+                if (particle.isAlive()) {
+                    particle.draw();
+                    return true;
+                }
+                return false;
+            });
+            
+            // 更新文字粒子
+            particles.forEach(particle => {
+                particle.update(phase);
+                particle.draw();
+            });
+            
+            // 更新调试信息
+            debugInfo.textContent = 
+                `当前: ${texts[currentTextIndex]} | 下一: ${texts[nextTextIndex]} | 阶段: ${phase} | 文字粒子: ${particles.length} | 随机粒子: ${randomParticles.length}`;
+            
+            // 阶段管理
+            phaseTimer++;
+            
+            if (phase === "display") {
+                if (phaseTimer >= displayDuration) {
+                    phase = "transition";
+                    phaseTimer = 0;
+                    
+                    const nextNextIndex = (nextTextIndex + 1) % texts.length;
+                    console.log(`开始过渡到: ${texts[nextNextIndex]}`);
+                    
+                    const nextNextPositions = createParticlePositions(texts[nextNextIndex]);
+                    particles = redistributeParticles(particles, nextPositions, nextNextPositions);
+                }
+            } else if (phase === "transition") {
+                if (phaseTimer >= transitionDuration) {
+                    phase = "display";
+                    phaseTimer = 0;
+                    
+                    // 强制完成过渡
+                    particles.forEach(particle => {
+                        if (particle.transitionProgress < 1) {
+                            particle.transitionProgress = 1;
+                            particle.currentX = particle.nextTargetX;
+                            particle.currentY = particle.nextTargetY;
+                            particle.targetX = particle.nextTargetX;
+                            particle.targetY = particle.nextTargetY;
+                        }
+                    });
+                    
+                    currentTextIndex = nextTextIndex;
+                    nextTextIndex = (nextTextIndex + 1) % texts.length;
+                    currentPositions = nextPositions;
+                    nextPositions = createParticlePositions(texts[nextTextIndex]);
+                    
+                    console.log(`过渡完成，现在显示: ${texts[currentTextIndex]}`);
+                }
+            }
+            
+            requestAnimationFrame(animate);
+        }
+        
+        // 键盘事件
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                console.log('按ESC退出');
+            }
+        });
+        
+        // 开始动画
+        console.log('开始动画，文字列表:', texts);
+        animate();
     </script>
 </body>
 </html>
